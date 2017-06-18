@@ -1,2 +1,2 @@
 # ssh-manager
-CLI based terminal manager for SSH client
+CLI based terminal manager for SSH clients
