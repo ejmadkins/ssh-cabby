@@ -1,56 +1,64 @@
 #!/usr/bin/env python
 
-import subprocess
 import json
+import subprocess
+import os
 
 
-# Open new terminal and connect to host
-def connect(hostname, port, username, password):
+# open new terminal and connect to host
+def connect_linux(hostname, port, username, password):
     # bash command to connect to host
-    return subprocess.Popen("gnome-terminal --window-with-profile=TERMINAL-SCRIPT --geometry 118x30 -x sh -c \"sshpass -p {0} ssh -o StrictHostKeyChecking=no -p {1} -l {2} {3}\"".format(password, port, username, hostname), shell=True)
+    return subprocess.Popen("gnome-terminal --window-with-profile=TERMINAL-SCRIPT --geometry 118x30 -x sh -c \"sshpass -p {3} ssh -o StrictHostKeyChecking=no -p {1} -l {2} {0}\"".format(hostname, port, username, password), shell=True)
 
 
-# Get ssh host information from the specific host file
+# open new terminal and connect to host
+def connect_osx(hostname, port, username):
+    return os.system('ssh -p {1} -l {2} {0}'.format(hostname, port, username))
+
+
+# get host information from json file
 def get_hosts(json_file):
     with open (json_file) as host_file:
         host_dict = json.load(host_file)
     return host_dict
 
 
+# return host information for a given level of the menu
+def menu_level_selector(key_list, level, option):
+    if level == 'top-menu':
+        return [i for i in get_hosts(key_list)]
+    else:
+        return [i for i in get_hosts(key_list).items()[option][1]]
+
+
+# print menu level and return user input and the value to quit
+def print_menu(key_list, level='top-menu', option=1):
+    for idx, key in enumerate(menu_level_selector(key_list, level, option)):
+        print("{0}: {1}".format(idx, key.upper()))
+    else:
+        quit_idx = idx + 1
+        print("{0}: QUIT".format(quit_idx))
+    option = raw_input("ENTER OPTION (0-{0}) ==> ".format(quit_idx))
+    return {"user_input" : option, "exit_value" : quit_idx}
+
+
 def main():
+    key_list = 'example_hosts.json'
     while True:
-        key_list = get_hosts('example_hosts.json')
-        for idx, key in enumerate(key_list):
-            print "{0}: {1}".format(idx, key.upper())
-        else:
-            quit_idx = idx + 1
-            print "{0}: QUIT".format(quit_idx)
-        # Get user input to connect to device
-        option = raw_input("ENTER OPTION (0-{0}) ==> ".format(quit_idx))
-        # Provides a number of ways to break from for loop
-        if option.lower() == "quit" or option.isdigit() and int(option) == quit_idx:
+        menu = print_menu(key_list)
+        if menu['user_input'].lower() == "quit" or menu['user_input'].isdigit() and int(menu['user_input']) == menu['exit_value']:
             break
-        elif option.isdigit() and int(option) < quit_idx:
-            while True:
-                for idx, key in enumerate(key_list.items()[int(option)][1]):
-                    print "{0}: {1}".format(idx, key.upper())
-                else:
-                    quit_idx = idx + 1
-                    print "{0}: QUIT".format(quit_idx)
-                get_device = raw_input("ENTER OPTION (0-{0}) ==> ".format(quit_idx))
-                if get_device.lower() == "quit" or get_device.isdigit() and int(get_device) == quit_idx:
-                    break
-                elif get_device.isdigit() and int(get_device) < quit_idx:
-                    top_level_menu = key_list.items()[int(option)][1]
-                    device = top_level_menu.items()[int(get_device)]
-                    print("\n\n ===> CONNECTING TO {0}...\n\n".format(device[0].upper()))
-                    #connect to user defined host
-                    connect(device[1]['ipAddress'], device[1]['port'], device[1]['username'], device[1]['password'])
-                else:
-                    True
-        else:
-            True
+        elif menu['user_input'].isdigit() and int(menu['user_input']) < menu['exit_value']:
+            level = 'sub-menu'
+            sub_menu = print_menu(key_list, level, int(menu['user_input']))
+            if sub_menu['user_input'].lower() == "quit" or sub_menu['user_input'].isdigit() and int(sub_menu['user_input']) == sub_menu['exit_value']:
+                level = 'top-menu'
+            else:
+                selected_group = get_hosts(key_list).items()[int(menu['user_input'])][1]
+                selected_device = selected_group.items()[int(sub_menu['user_input'])]
+                print("\n\n ===> CONNECTING TO {0}...\n\n".format(selected_device[0].upper()))
+                connect_osx(selected_device[1]['ipAddress'], selected_device[1]['port'], selected_device[1]['username'])
+
 
 if __name__ == "__main__":
     main()
-
