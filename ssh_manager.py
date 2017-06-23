@@ -1,60 +1,127 @@
 #!/usr/bin/env python
 
+# Built-in modules
 import json
 import subprocess
 import os
 
+__author__ = "Ed Adkins"
+__copyright__ = "Copyright (C) 2017 Ed Adkins"
+__license__ = "MIT"
+__version__ = "1.0"
 
-# open new terminal and connect to host
+
 def connect_linux(hostname, port, username, password):
-    # bash command to connect to host
+    """ Opens new terminal in a linux enviroment and connects to host
+
+    Args:
+        hostname: Device hostname
+        port: TCP port number to be used for ssh connection
+        username: Device username
+        password: Device password
+
+    Returns:
+        A bash command to initiate a terminal session to the selected host
+    """
     return subprocess.Popen("gnome-terminal --window-with-profile=TERMINAL-SCRIPT --geometry 118x30 -x sh -c \"sshpass -p {3} ssh -o StrictHostKeyChecking=no -p {1} -l {2} {0}\"".format(hostname, port, username, password), shell=True)
 
 
-# open new terminal and connect to host
 def connect_osx(hostname, port, username):
+    """ Opens new terminal in an OSX enviroment and connects to host
+
+    Args:
+        hostname: Device hostname
+        port: TCP port number to be used for ssh connection
+        username: Device username
+
+    Returns:
+        A bash command to initiate a terminal session to the selected host
+    """
     return os.system('ssh -p {1} -l {2} {0}'.format(hostname, port, username))
 
 
-# get host information from json file
-def get_hosts(json_file):
-    with open (os.path.join('./host_files', 'test_hosts_all.json'), 'r') as host_file:
+def get_hosts(host_file):
+    """ Fetches host data from a specified host_file
+
+    Args:
+        host_file: Device host file in JSON format
+
+    Returns:
+        A dict mapping keys to the corresponding host data, as follows:
+
+        {u'Group-1':
+            {u'example-device-2':
+                {u'username': u'username',
+                u'password': u'password',
+                u'ipAddress': u'10.0.0.2',
+                u'port': u'22'},
+            u'example-device-3':
+                {u'username': u'username',
+                u'password': u'password',
+                u'ipAddress': u'10.0.0.3',
+                u'port': u'22'}
+            }
+        }
+    """
+    with open(os.path.join('./host_files', host_file), 'r') as host_file:
         host_dict = json.load(host_file)
     return host_dict
 
 
-# return host information for a given level of the menu
-def menu_level_selector(key_list, level, option):
+def menu_level_selector(host_file, level, group):
+    """ Selects corresponding menu level
+
+    Args:
+        host_file: Device host file in JSON format
+        level: Specifies the current menu level
+        group: Specifies the user selected group
+
+    Returns:
+        A list of strings representing either groups or devices:
+
+        top-menu: [u'Group-1', u'Group-2']
+        sub-menu: [u'example-device-2', u'example-device-3', u'example-device-1']
+    """
     if level == 'top-menu':
-        return [i for i in get_hosts(key_list)]
-    else:
-        return [i for i in get_hosts(key_list).items()[option][1]]
+        return [i for i in get_hosts(host_file)]
+    return [i for i in get_hosts(host_file).values()[group]]
 
 
-# print menu level and return user input and the value to quit
-def print_menu(key_list, level='top-menu', option=1):
-    for idx, key in enumerate(menu_level_selector(key_list, level, option)):
+def print_menu(host_file, level='top-menu', group=1):
+    """ Prints interactive menu to screen
+
+    Args:
+        host_file: Device host file in JSON format
+        level: Optional variable that specifies the current menu level
+        group: Another optional variable that specifies the user selected group
+
+    Returns:
+        A dict mapping keys to a user selected group and a value to exit
+
+        {'user_input': '0', 'exit_value': 2}
+    """
+    for idx, key in enumerate(menu_level_selector(host_file, level, group)):
         print("{0}: {1}".format(idx, key.upper()))
     else:
         quit_idx = idx + 1
         print("{0}: QUIT".format(quit_idx))
-    option = raw_input("ENTER OPTION (0-{0}) ==> ".format(quit_idx))
-    return {"user_input" : option, "exit_value" : quit_idx}
+    group = raw_input("ENTER group (0-{0}) ==> ".format(quit_idx))
+    return {"user_input" : group, "exit_value" : quit_idx}
 
 
 def main():
-    key_list = 'example_hosts.json'
+    host_file = 'example_hosts.json'
     while True:
-        menu = print_menu(key_list)
+        menu = print_menu(host_file)
         if menu['user_input'].lower() == "quit" or menu['user_input'].isdigit() and int(menu['user_input']) == menu['exit_value']:
             break
         elif menu['user_input'].isdigit() and int(menu['user_input']) < menu['exit_value']:
             level = 'sub-menu'
-            sub_menu = print_menu(key_list, level, int(menu['user_input']))
+            sub_menu = print_menu(host_file, level, int(menu['user_input']))
             if sub_menu['user_input'].lower() == "quit" or sub_menu['user_input'].isdigit() and int(sub_menu['user_input']) == sub_menu['exit_value']:
                 level = 'top-menu'
             else:
-                selected_group = get_hosts(key_list).items()[int(menu['user_input'])][1]
+                selected_group = get_hosts(host_file).values()[int(menu['user_input'])]
                 selected_device = selected_group.items()[int(sub_menu['user_input'])]
                 print("\n\n ===> CONNECTING TO {0}...\n\n".format(selected_device[0].upper()))
                 connect_osx(selected_device[1]['ipAddress'], selected_device[1]['port'], selected_device[1]['username'])
