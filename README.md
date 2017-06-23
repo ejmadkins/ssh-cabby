@@ -50,7 +50,7 @@ A CLI based terminal manager for SSH clients that groups devices based on the st
 ENTER group (0-2) ==> 0
 ```
 
-4. Select a group based on the group ID:
+4. Select a group based on the device ID:
 
 ```
 0: EXAMPLE-DEVICE-2
