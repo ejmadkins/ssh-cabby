@@ -18,7 +18,7 @@ def connect_osx(hostname, port, username):
 
 # get host information from json file
 def get_hosts(json_file):
-    with open (os.path.join('./host_files', 'test_hosts.json'), 'r') as host_file:
+    with open (os.path.join('./host_files', 'test_hosts_all.json'), 'r') as host_file:
         host_dict = json.load(host_file)
     return host_dict
 
