@@ -134,11 +134,12 @@ def main(host_file):
         elif menu['user_input'].isdigit() and int(menu['user_input']) < menu['exit_value']:
             level = "sub-menu"
             sub_menu = print_menu(host_file, level, int(menu['user_input']))
+            # If the user enters quit or enters an integer to quit then revert to top level menu
             if sub_menu['user_input'].lower() == "quit" or sub_menu['user_input'].isdigit() and int(sub_menu['user_input']) == sub_menu['exit_value']:
                 level = "top-menu"
             else:
-                selected_group = get_hosts(host_file).values()[int(menu['user_input'])]
-                selected_device = selected_group.items()[int(sub_menu['user_input'])]
+                # Gets the selected device from the chosen host file
+                selected_device = get_hosts(host_file).values()[int(menu['user_input'])].items()[int(sub_menu['user_input'])]
                 print('\n\n ===> CONNECTING TO {0}...\n\n'.format(selected_device[0].upper()))
                 connect_osx(selected_device[1]['ipAddress'], selected_device[1]['port'], selected_device[1]['username'])
 
