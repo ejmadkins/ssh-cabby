@@ -1,6 +1,6 @@
 # SSH Manager
 
-A CLI based terminal manager for SSH clients that groups devices based on the structure defined in the specified host file.  The tool works in both Linux (tested on Ubuntu) and OSX environments.
+A CLI based terminal manager for SSH clients that groups devices based on the structure defined in the specified host file.  The tool works in both Linux (tested on Ubuntu) and OSX environments using modules from the Python standard library.
 
 1. Add host devices organised into groups to a specified host file:
 
