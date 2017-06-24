@@ -39,7 +39,7 @@ A CLI based terminal manager for SSH clients that groups devices based on the st
 
 2. Execute the ssh_manager.py script:
 
-`python ssh_manager.py`
+`python ssh_manager.py -f example_file.json`
 
 3. Select a group based on the group ID:
 
