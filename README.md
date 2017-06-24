@@ -2,7 +2,7 @@
 
 A CLI based terminal manager for SSH clients that groups devices based on the structure defined in the specified host file.  The tool works in both Linux (tested on Ubuntu) and OSX environments using modules from the Python standard library.
 
-1. Add host devices organised into groups to a specified host file:
+1. Add host devices organised into groups to a specified host file in the following JSON format:
 
 ```
 {
@@ -37,7 +37,7 @@ A CLI based terminal manager for SSH clients that groups devices based on the st
 }
 ```
 
-2. Execute the ssh_manager.py script:
+2. Execute the ssh_manager.py script appending the '-f' or '--file' keyword arguments with the chosen host file:
 
 `python ssh_manager.py -f example_file.json`
 
